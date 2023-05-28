@@ -1,0 +1,156 @@
+---
+title: "Soja (Glycine max)"
+description: ""
+author script: 
+  - name: "Ítalo Marques-Monteiro"
+    github: https://github.com/italomarquesmonteiro
+    kaggle: https://www.kaggle.com/talomarquesmonteiro
+    linkedin: linkedin.com/in/ítalo-monteiro-0b2516144
+    lattes: http://lattes.cnpq.br/7174985368517137
+    orcid_id: https://orcid.org/0000-0003-4367-1034
+    affiliation: Anhanguera College  
+        - Department: Veterinary Medicine
+date: "2023-05-26"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ 
+   *package* [`{tidyverse}`](https://www.tidyverse.org) possui um ecossistema de packages:
+                           ->[{`ggplot2`}](https://ggplot2.tidyverse.org/).
+                            ->[{`tibble`}](https://tibble.tidyverse.org/).
+                             ->[{`tidyr`}](https://tidyr.tidyverse.org/).
+                              ->[{`dplyr`}](https://dplyr.tidyverse.org/).
+                               ->[{`readr`}](https://readr.tidyverse.org/).
+                                ->[{`purrr`}](https://purrr.tidyverse.org/).
+                                 ->[{`forcats`}](https://forcats.tidyverse.org/).
+   *package* [{`geobr`}](https://github.com/ipeaGIT/geobr). Tem fácil acesso a conjuntos de dados espaciais oficiais do Brasil como objetos 'sf' em R. O pacote inclui uma ampla gama de dados geoespaciais disponíveis em várias escalas geográficas e por vários anos com atributos harmonizados, projeção e topologia fixa.
+                 - Dados do Instituto Brasileiro de Geografia e Estatística[`IBGE`](https://concla.ibge.gov.br/classificacoes/por-tema/codigo-de-areas/codigo-de-areas)
+
+```{r} 
+library(tidyverse)
+library(geobr)
+```
+
+
+Notas:
+* Os municípios sem informação para pelo menos um produto da lavoura temporária não aparecem nas listas;
+
+* Valores para a categoria Total indisponíveis para as variáveis Quantidade produzida e Rendimento médio, 
+    pois as unidades de medida diferem para determinados produtos.
+
+* A diferença entre a `área plantada` e a área colhida na lavoura temporária é considerada como área perdida.
+
+* `Valor da produção`: Variável derivada calculada pela média ponderada das informações de quantidade e preço médio corrente pago ao produtor, 
+    de acordo com os períodos de colheita e comercialização de cada produto. As despesas de frete, taxas e impostos não são incluídas no preço.
+
+* Os dados do último ano divulgado são `RESULTADOS PRELIMINARES` e podem sofrer alterações até a próxima divulgação
+
+
+
+
+* Soja [{`Glycine max`}](https://pt.wikipedia.org/wiki/Soja)
+
+* dados originais [{`IBGE`}](https://ibge.gov.br)
+> tabela [{`SIDRA`}](https://sidra.ibge.gov.br/tabela/1612)
+```{r}
+soja_temp <- readr::read_csv(
+    "C:/Users/italo/OneDrive/Área de Trabalho/VsCode/ibge/soja.csv",
+        col_types = "ddddnndddn",
+            locale = locale(decimal_mark = ".",
+                grouping_mark = ",")) |>
+    dplyr::glimpse() 
+soja_temp |>
+    tibble::view()
+```
+
+
+```{r}
+municipio <- geobr::read_municipality(code_muni = "all", year = 2020) |>
+    dplyr::rename(id_municipio = code_muni) |>
+    dplyr::mutate(id_municipio = as.double(id_municipio)) |>
+    dplyr::glimpse()
+```
+
+```{r}
+soja <-  municipio |>
+    dplyr::left_join(soja_temp) |>
+    dplyr::glimpse()
+```
+
+
+```{r}
+soja |>
+    dplyr::filter(abbrev_state == "RS", ano == 2021) |> 
+    ggplot2::ggplot() +
+    geom_sf(aes(fill = rendimento_medio_kg_hectare)) +
+    viridis::scale_fill_viridis(discrete = FALSE) +
+    theme(legend.position = c(0.9, 0.25),
+    panel.grid.major = element_line(colour = "gray95"),
+    panel.background = element_rect(fill = "gray95"),
+    legend.background = element_rect(
+        fill = "grey95", colour = "gray95", size = 3)) +
+    labs(
+        fill = "Rendimento \n(Kg/hectare)",
+        x = "Longitude",
+        y = "Latitude") +
+    annotate("text", x = -54, y = -26.9, color = "gray30", size = 8,
+        label = "Rendimento médio de soja por hectare - RS") +
+    annotate("text", x = -56, y = -31.9, color = "gray40", size = 5,
+        label = "Pesquisa pecuária municipal (2021)") +
+    annotate("text", x = -56, y = -32.3,
+    label = "Source: IBGE [open data(2023)]
+    by Ítalo Monteiro" , color = "gray50") +
+    ggspatial::annotation_scale(
+      height = unit(0.2, "cm"),
+      pad_x = unit(0.5, "cm"),
+      pad_y = unit(0.5, "cm")) +
+    ggspatial::annotation_north_arrow(
+      width = unit(0.7, "cm"),
+      height = unit(0.9, "cm"),
+      pad_x = unit(3, "cm"),
+      pad_y = unit(1, "cm"))
+```  
+
+
+
+```{r}
+soja |>
+    dplyr::filter(ano == 2021) |> 
+    ggplot2::ggplot() +
+    geom_sf(aes(fill = rendimento_medio_kg_hectare)) +
+    viridis::scale_fill_viridis(discrete = FALSE) +
+    theme(legend.position = c(0.25, 0.25),
+    panel.grid.major = element_line(colour = "gray95"),
+    panel.background = element_rect(fill = "gray95"),
+    legend.background = element_rect(
+        fill = "grey95", colour = "gray95", size = 1)) +
+    labs(
+        fill = "Rendimento\n(Kg/hectare)",
+        x = "Longitude",
+        y = "Latitude") +
+    annotate("text", x = -51, y = 6, color = "gray30", size = 10,
+        label = "Rendimento médio de soja por hectare") +
+    annotate("text", x = -36, y = -25, color = "gray40", size = 5,
+        label = "Pesquisa pecuária municipal (2021)") +
+    annotate("text", x = -36, y = -30,
+    label = "Source: IBGE [open data(2023)]
+    by Ítalo Monteiro" , color = "gray50") +
+    ggspatial::annotation_scale(
+      height = unit(0.2, "cm"),
+      pad_x = unit(17, "cm"),
+      pad_y = unit(0.5, "cm")) +
+    ggspatial::annotation_north_arrow(
+      width = unit(0.7, "cm"),
+      height = unit(0.9, "cm"),
+      pad_x = unit(19, "cm"),
+      pad_y = unit(1, "cm"))
+```
+
+```{r}
+soja |>
+    dplyr::select(ano, abbrev_state, name_muni, rendimento_medio_kg_hectare) |>
+    dplyr::filter(ano == 2021) |>
+    dplyr::arrange(desc(rendimento_medio_kg_hectare))
+```
