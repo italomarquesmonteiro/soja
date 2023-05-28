@@ -81,7 +81,7 @@ soja <-  municipio |>
 
 
 ```{r}
-soja |>
+soja_rs <- soja |>
     dplyr::filter(abbrev_state == "RS", ano == 2021) |> 
     ggplot2::ggplot() +
     geom_sf(aes(fill = rendimento_medio_kg_hectare)) +
@@ -111,12 +111,20 @@ soja |>
       height = unit(0.9, "cm"),
       pad_x = unit(3, "cm"),
       pad_y = unit(1, "cm"))
-```  
+soja_rs
+``` 
+
+```{r}
+ggsave(
+    "C:/Users/italo/OneDrive/Área de Trabalho/GitHub/soja/image/soja_rs.png",
+    plot = soja_rs,
+    dpi = 1200)
+```
 
 
 
 ```{r}
-soja |>
+soja_br <- soja |>
     dplyr::filter(ano == 2021) |> 
     ggplot2::ggplot() +
     geom_sf(aes(fill = rendimento_medio_kg_hectare)) +
@@ -146,6 +154,14 @@ soja |>
       height = unit(0.9, "cm"),
       pad_x = unit(19, "cm"),
       pad_y = unit(1, "cm"))
+soja_br
+```
+
+```{r}
+ggsave(
+    "C:/Users/italo/OneDrive/Área de Trabalho/GitHub/soja/image/soja_br.png",
+    plot = soja_br,
+    dpi = 1200)
 ```
 
 ```{r}
